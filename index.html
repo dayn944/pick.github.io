@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord Slot Pick System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .header h1 {
+            color: #5865F2;
+            margin-bottom: 10px;
+        }
+
+        .discord-setup {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #5865F2;
+        }
+
+        .discord-setup h3 {
+            color: #5865F2;
+            margin-bottom: 15px;
+        }
+
+        .setup-steps {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .step {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            border-left: 3px solid #5865F2;
+        }
+
+        .step-number {
+            background: #5865F2;
+            color: white;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .discord-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #5865F2;
+            color: white;
+        }
+
+        .btn-success {
+            background: #57F287;
+            color: black;
+        }
+
+        .btn-danger {
+            background: #ED4245;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #FEE75C;
+            color: black;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .admin-panel {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 2px solid #dc3545;
+        }
+
+        .admin-panel h2 {
+            color: #dc3545;
+            margin-bottom: 15px;
+        }
+
+        .admin-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .status-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .status-item {
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .map-container {
+            margin-bottom: 30px;
+        }
+
+        .map-container h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .map {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 15px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            min-height: 400px;
+        }
+
+        .slot {
+            background: white;
+            border: 3px solid #667eea;
+            border-radius: 10px;
+            padding: 15px 10px;
+            text-align: center;
+            position: relative;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        .slot.occupied {
+            border-color: #57F287;
+            background: #f8fff9;
+        }
+
+        .slot-number {
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            background: #667eea;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .slot.occupied .slot-number {
+            background: #57F287;
+        }
+
+        .slot-username {
+            font-weight: bold;
+            color: #333;
+            word-break: break-word;
+            margin-top: 5px;
+        }
+
+        .participants-list {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .participants-list h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        #participantsQueue {
+            list-style-position: inside;
+        }
+
+        #participantsQueue li {
+            padding: 8px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+
+        .notification.success {
+            background: #57F287;
+        }
+
+        .notification.error {
+            background: #ED4245;
+        }
+
+        .notification.info {
+            background: #5865F2;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .discord-message-preview {
+            background: #2C2F33;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-family: 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        }
+
+        .discord-reactions {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .discord-reaction {
+            background: #40444B;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .discord-reaction:hover {
+            background: #4F545C;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .test-section {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .map {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .admin-controls, .discord-controls {
+                flex-direction: column;
+            }
+            
+            .status-panel {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Discord Slot Pick System</h1>
+            <p>Система записи в слоты через Discord реакции ✅</p>
+        </div>
+
+        <!-- Discord Setup -->
+        <div class="discord-setup">
+            <h3>🚀 Интеграция с Discord</h3>
+            
+            <div class="setup-steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div>
+                        <strong>Скопируйте код бота ниже</strong>
+                        <p>Создайте файл <code>bot.js</code> на своем компьютере и вставьте код</p>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div>
+                        <strong>Замените токен и ID канала</strong>
+                        <p>В коде бота замените <code>YOUR_BOT_TOKEN</code> и <code>YOUR_CHANNEL_ID</code></p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div>
+                        <strong>Запустите бота</strong>
+                        <p>В командной строке: <code>node bot.js</code></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="discord-controls">
+                <button class="btn btn-success" onclick="showBotCode()">🤖 Показать код бота</button>
+                <button class="btn btn-primary" onclick="testManualAdd()">🧪 Тест: Добавить пользователя</button>
+            </div>
+
+            <div class="discord-message-preview">
+                <strong>📝 Сообщение в Discord:</strong>
+                <p>🎯 <strong>СИСТЕМА ЗАПИСИ В СЛОТЫ</strong></p>
+                <p>Нажмите на реакцию ✅ чтобы записаться в очередь</p>
+                <div class="discord-reactions">
+                    <span class="discord-reaction">✅</span> - Записаться в очередь
+                </div>
+                <p><em>Слоты заполняются по порядку нажатия</em></p>
+            </div>
+        </div>
+
+        <!-- Bot Code Section -->
+        <div id="botCodeSection" style="display: none; background: #2b2b2b; color: #f8f8f2; padding: 20px; border-radius: 10px; margin: 20px 0;">
+            <h3>🤖 Код для Discord бота</h3>
+            <textarea id="botCode" readonly style="width: 100%; height: 500px; background: #1e1e1e; color: #f8f8f2; border: none; padding: 15px; font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.4;"></textarea>
+            <div class="discord-controls">
+                <button onclick="copyBotCode()" class="btn btn-success">📋 Скопировать код</button>
+                <button onclick="downloadBotCode()" class="btn btn-primary">💾 Скачать bot.js</button>
+            </div>
+        </div>
+
+        <!-- Admin Panel -->
+        <div class="admin-panel">
+            <h2>⚙️ Панель управления</h2>
+            <div class="admin-controls">
+                <button class="btn btn-success" onclick="togglePicking(true)">✅ Включить запись</button>
+                <button class="btn btn-danger" onclick="togglePicking(false)">❌ Выключить запись</button>
+                <button class="btn btn-warning" onclick="resetPicks()">🔄 Сбросить очередь</button>
+                <button class="btn btn-primary" onclick="exportData()">💾 Экспорт данных</button>
+            </div>
+            
+            <div class="status-panel">
+                <div class="status-item">
+                    <strong>Статус системы:</strong>
+                    <div id="systemStatus">✅ Включена</div>
+                </div>
+                <div class="status-item">
+                    <strong>В очереди:</strong>
+                    <div id="totalPicks">0/17</div>
+                </div>
+                <div class="status-item">
+                    <strong>Последнее действие:</strong>
+                    <div id="lastAction">-</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Map -->
+        <div class="map-container">
+            <h2>🗺️ Карта слотов</h2>
+            <div class="map" id="map">
+                <!-- Слоты создаются через JavaScript -->
+            </div>
+        </div>
+
+        <!-- Participants List -->
+        <div class="participants-list">
+            <h3>📋 Очередь записи</h3>
+            <ol id="participantsQueue">
+                <li>Очередь пуста</li>
+            </ol>
+        </div>
+
+        <!-- Test Section -->
+        <div class="test-section">
+            <h3>🧪 Тестирование системы</h3>
+            <p>Проверьте работу без Discord бота:</p>
+            <div class="discord-controls">
+                <input type="text" id="testUsername" placeholder="Имя пользователя" value="akkawfdkosdiwkekdsiskfas">
+                <button class="btn btn-success" onclick="addUserManual()">✅ Добавить в очередь</button>
+                <button class="btn btn-danger" onclick="removeUserManual()">❌ Удалить из очереди</button>
+                <button class="btn btn-warning" onclick="addDemoUsers()">🎪 Добавить 5 тестовых</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications -->
+    <div id="notifications"></div>
+
+    <script>
+        // ==================== КОНФИГУРАЦИЯ ====================
+        const REACTION_EMOJI = '✅';
+        
+        // ==================== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ====================
+        let pickingEnabled = true;
+        let pickQueue = [];
+        let eventListeners = [];
+
+        // ==================== ИНИЦИАЛИЗАЦИЯ ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+
+        function initializeApp() {
+            loadData();
+            initializeMap();
+            updateDisplay();
+            setupEventListeners();
+            updateLastAction('Система запущена');
+            
+            // Автоматически показываем код бота
+            setTimeout(showBotCode, 1000);
+        }
+
+        // ==================== ОСНОВНЫЕ ФУНКЦИИ ====================
+
+        function loadData() {
+            const savedPicking = localStorage.getItem('pickingEnabled');
+            const savedQueue = localStorage.getItem('pickQueue');
+
+            pickingEnabled = savedPicking === 'true';
+            pickQueue = savedQueue ? JSON.parse(savedQueue) : [];
+        }
+
+        function saveData() {
+            localStorage.setItem('pickingEnabled', pickingEnabled);
+            localStorage.setItem('pickQueue', JSON.stringify(pickQueue));
+            updateDisplay();
+        }
+
+        function initializeMap() {
+            const map = document.getElementById('map');
+            map.innerHTML = '';
+            
+            for (let i = 1; i <= 17; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'slot';
+                slot.id = `slot-${i}`;
+                slot.innerHTML = `
+                    <div class="slot-number">${i}</div>
+                    <div class="slot-username" id="slot-username-${i}">Свободно</div>
+                `;
+                map.appendChild(slot);
+            }
+        }
+
+        function updateDisplay() {
+            updateSystemStatus();
+            updateMapSlots();
+            updateParticipantsList();
+        }
+
+        function updateSystemStatus() {
+            const statusElement = document.getElementById('systemStatus');
+            const totalPicksElement = document.getElementById('totalPicks');
+            
+            if (pickingEnabled) {
+                statusElement.textContent = '✅ Включена';
+                statusElement.style.color = '#57F287';
+            } else {
+                statusElement.textContent = '❌ Выключена';
+                statusElement.style.color = '#ED4245';
+            }
+            
+            totalPicksElement.textContent = `${pickQueue.length}/17`;
+        }
+
+        function updateMapSlots() {
+            // Очищаем все слоты
+            for (let i = 1; i <= 17; i++) {
+                const slot = document.getElementById(`slot-${i}`);
+                const slotUsername = document.getElementById(`slot-username-${i}`);
+                
+                slot.classList.remove('occupied');
+                slotUsername.textContent = 'Свободно';
+                slotUsername.style.color = '#666';
+            }
+            
+            // Заполняем слоты по порядку очереди
+            pickQueue.forEach((pick, index) => {
+                const slotNumber = index + 1;
+                if (slotNumber <= 17) {
+                    const slot = document.getElementById(`slot-${slotNumber}`);
+                    const slotUsername = document.getElementById(`slot-username-${slotNumber}`);
+                    
+                    slot.classList.add('occupied');
+                    slotUsername.textContent = pick.nickname;
+                    slotUsername.style.color = '#333';
+                }
+            });
+        }
+
+        function updateParticipantsList() {
+            const queueList = document.getElementById('participantsQueue');
+            
+            if (pickQueue.length === 0) {
+                queueList.innerHTML = '<li>Очередь пуста</li>';
+                return;
+            }
+            
+            queueList.innerHTML = '';
+            pickQueue.forEach((pick, index) => {
+                const li = document.createElement('li');
+                const time = new Date(pick.timestamp).toLocaleTimeString();
+                li.textContent = `${index + 1}. ${pick.nickname} (${time})`;
+                queueList.appendChild(li);
+            });
+        }
+
+        function updateLastAction(action) {
+            document.getElementById('lastAction').textContent = action;
+        }
+
+        // ==================== УПРАВЛЕНИЕ ОЧЕРЕДЬЮ ====================
+
+        function addUserToQueue(username) {
+            if (!pickingEnabled) {
+                console.log('Запись закрыта, игнорируем:', username);
+                return false;
+            }
+
+            // Проверяем, не записан ли уже пользователь
+            const userAlreadyInQueue = pickQueue.find(pick => pick.nickname === username);
+            if (userAlreadyInQueue) {
+                console.log(`Пользователь ${username} уже в очереди`);
+                showNotification(`❌ ${username} уже в очереди!`, 'error');
+                return false;
+            }
+
+            // Проверяем, не заполнены ли все слоты
+            if (pickQueue.length >= 17) {
+                console.log('Все слоты заняты:', username);
+                showNotification(`❌ ${username} не смог записаться - все слоты заняты!`, 'error');
+                return false;
+            }
+
+            // Добавляем в очередь
+            const queueNumber = pickQueue.length + 1;
+            const pickData = {
+                nickname: username,
+                queueNumber: queueNumber,
+                timestamp: new Date(),
+                source: 'discord'
+            };
+
+            pickQueue.push(pickData);
+            saveData();
+            
+            const actionText = `✅ ${username} записался в очередь (позиция ${queueNumber})`;
+            showNotification(actionText, 'success');
+            updateLastAction(actionText);
+            console.log(actionText);
+            return true;
+        }
+
+        function removeUserFromQueue(username) {
+            const userIndex = pickQueue.findIndex(pick => pick.nickname === username);
+
+            if (userIndex !== -1) {
+                const removedUser = pickQueue[userIndex];
+                pickQueue.splice(userIndex, 1);
+                
+                // Перенумеровываем оставшихся пользователей
+                pickQueue.forEach((pick, index) => {
+                    pick.queueNumber = index + 1;
+                });
+                
+                saveData();
+                
+                const actionText = `❌ ${username} вышел из очереди`;
+                showNotification(actionText, 'error');
+                updateLastAction(actionText);
+                console.log(actionText);
+                return true;
+            }
+            return false;
+        }
+
+        // ==================== ФУНКЦИИ УПРАВЛЕНИЯ ====================
+
+        function togglePicking(enabled) {
+            pickingEnabled = enabled;
+            saveData();
+            const action = enabled ? 'Запись открыта' : 'Запись закрыта';
+            showNotification(action, enabled ? 'success' : 'error');
+            updateLastAction(action);
+        }
+
+        function resetPicks() {
+            if (confirm('Вы уверены, что хотите сбросить всю очередь?')) {
+                pickQueue = [];
+                saveData();
+                showNotification('Очередь сброшена', 'info');
+                updateLastAction('Очередь сброшена');
+            }
+        }
+
+        // ==================== ТЕСТИРОВАНИЕ ====================
+
+        function addUserManual() {
+            const username = document.getElementById('testUsername').value || 'TestUser';
+            addUserToQueue(username);
+        }
+
+        function removeUserManual() {
+            const username = document.getElementById('testUsername').value || 'TestUser';
+            removeUserFromQueue(username);
+        }
+
+        function addDemoUsers() {
+            const demoUsers = [
+                'akkawfdkosdiwkekdsiskfas',
+                'User_Алексей',
+                'User_Мария', 
+                'User_Дмитрий',
+                'User_Анна'
+            ];
+            
+            let added = 0;
+            demoUsers.forEach((user, index) => {
+                setTimeout(() => {
+                    if (addUserToQueue(user)) {
+                        added++;
+                    }
+                }, index * 500);
+            });
+            
+            setTimeout(() => {
+                showNotification(`✅ Добавлено ${added} тестовых пользователей`, 'success');
+            }, demoUsers.length * 500 + 500);
+        }
+
+        function testManualAdd() {
+            addUserToQueue('akkawfdkosdiwkekdsiskfas');
+        }
+
+        // ==================== DISCORD BOT CODE ====================
+
+        function showBotCode() {
+            const botCode = `const { Client, GatewayIntentBits, Partials } = require('discord.js');
+
+const client = new Client({
+    intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.GuildMessageReactions,
+        GatewayIntentBits.MessageContent,
+    ],
+    partials: [Partials.Message, Partials.Channel, Partials.Reaction]
+});
+
+// 🔧 КОНФИГУРАЦИЯ - ЗАМЕНИТЕ ЭТИ ЗНАЧЕНИЯ!
+const CONFIG = {
+    TOKEN: 'YOUR_BOT_TOKEN_HERE', // Ваш токен бота из Discord Developer Portal
+    TARGET_CHANNEL_ID: 'YOUR_CHANNEL_ID' // ID канала где будет работать
+};
+
+let reactionMessageId = null;
+
+client.on('ready', () => {
+    console.log('🎉 Бот запущен: ' + client.user.tag);
+    createReactionMessage();
+});
+
+// Создаем сообщение для реакций
+async function createReactionMessage() {
+    try {
+        const channel = await client.channels.fetch(CONFIG.TARGET_CHANNEL_ID);
+        const message = await channel.send(\`🎯 **СИСТЕМА ЗАПИСИ В СЛОТЫ**
+
+Нажмите на реакцию ✅ чтобы записаться в очередь
+
+• Нажмите ✅ - записываетесь в очередь
+• Слоты заполняются по порядку нажатия
+• Уберите реакцию - выходите из очереди
+
+**Статус:** ✅ Активна
+**Слотов:** 17
+        \`);
+
+        reactionMessageId = message.id;
+        await message.react('✅');
+        console.log('📝 Сообщение создано: ' + message.id);
+    } catch (error) {
+        console.error('❌ Ошибка:', error);
+    }
+}
+
+// Обработка реакции
+client.on('messageReactionAdd', async (reaction, user) => {
+    try {
+        if (user.bot) return;
+        if (reaction.partial) await reaction.fetch();
+        if (reaction.message.id !== reactionMessageId) return;
+        if (reaction.emoji.name !== '✅') return;
+
+        console.log('✅ ' + user.username + ' записался в очередь');
+        
+        // Отправляем данные на сайт
+        await sendToWebsite(user.username, 'add');
+        
+    } catch (error) {
+        console.error('Ошибка:', error);
+    }
+});
+
+// Обработка удаления реакции
+client.on('messageReactionRemove', async (reaction, user) => {
+    try {
+        if (user.bot) return;
+        if (reaction.partial) await reaction.fetch();
+        if (reaction.message.id !== reactionMessageId) return;
+        if (reaction.emoji.name !== '✅') return;
+
+        console.log('❌ ' + user.username + ' вышел из очереди');
+        await sendToWebsite(user.username, 'remove');
+        
+    } catch (error) {
+        console.error('Ошибка:', error);
+    }
+});
+
+// 📤 Отправка данных на сайт
+async function sendToWebsite(username, action) {
+    try {
+        // Данные для отправки
+        const data = {
+            username: username,
+            action: action, // 'add' или 'remove'
+            timestamp: new Date().toISOString()
+        };
+
+        console.log('📤 Отправляем данные:', data);
+
+        // Если сайт на localhost (для тестирования)
+        // await fetch('http://localhost:3000/api/discord-event', {
+        //     method: 'POST',
+        //     headers: { 'Content-Type': 'application/json' },
+        //     body: JSON.stringify(data)
+        // });
+
+        // Для GitHub Pages - сохраняем в localStorage
+        saveToLocalStorage(data);
+        
+    } catch (error) {
+        console.log('🌐 Сайт недоступен, сохраняем локально');
+        saveToLocalStorage({ username, action, timestamp: new Date().toISOString() });
+    }
+}
+
+// 💾 Резервное сохранение
+function saveToLocalStorage(data) {
+    // В реальном боте здесь будет отправка на ваш сервер
+    // Для демо просто логируем
+    console.log('💾 Данные для сайта:', JSON.stringify(data));
+    console.log('🔗 Скопируйте эти данные и вставьте в консоль сайта:');
+    console.log('handleDiscordEvent(' + JSON.stringify(data) + ')');
+}
+
+client.login(CONFIG.TOKEN);`;
+
+            document.getElementById('botCode').value = botCode;
+            document.getElementById('botCodeSection').style.display = 'block';
+            showNotification('Код бота загружен!', 'success');
+        }
+
+        function copyBotCode() {
+            const codeTextarea = document.getElementById('botCode');
+            codeTextarea.select();
+            document.execCommand('copy');
+            showNotification('Код бота скопирован!', 'success');
+        }
+
+        function downloadBotCode() {
+            const code = document.getElementById('botCode').value;
+            const blob = new Blob([code], { type: 'text/javascript' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'discord-bot.js';
+            a.click();
+            URL.revokeObjectURL(url);
+            showNotification('Файл bot.js скачан!', 'success');
+        }
+
+        // ==================== ИНТЕГРАЦИЯ С DISCORD ====================
+
+        function setupEventListeners() {
+            // Функция для приема событий от Discord бота
+            window.handleDiscordEvent = function(eventData) {
+                console.log('📥 Получено событие от Discord:', eventData);
+                const { username, action } = eventData;
+                
+                if (action === 'add') {
+                    addUserToQueue(username);
+                } else if (action === 'remove') {
+                    removeUserFromQueue(username);
+                }
+            };
+
+            // Симуляция получения событий каждые 3 секунды
+            setInterval(() => {
+                const pendingEvents = JSON.parse(localStorage.getItem('discordEvents') || '[]');
+                if (pendingEvents.length > 0) {
+                    pendingEvents.forEach(event => {
+                        handleDiscordEvent(event);
+                    });
+                    localStorage.setItem('discordEvents', '[]');
+                }
+            }, 3000);
+        }
+
+        // ==================== УТИЛИТЫ ====================
+
+        function exportData() {
+            const data = {
+                pickingEnabled: pickingEnabled,
+                pickQueue: pickQueue,
+                exportTime: new Date().toISOString()
+            };
+
+            const dataStr = JSON.stringify(data, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = \`slot-pick-\${new Date().toISOString().split('T')[0]}.json\`;
+            link.click();
+
+            URL.revokeObjectURL(url);
+            showNotification('Данные экспортированы', 'success');
+        }
+
+        function showNotification(message, type) {
+            const notifications = document.getElementById('notifications');
+            const notification = document.createElement('div');
+            notification.className = \`notification \${type}\`;
+            notification.textContent = message;
+
+            notifications.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 5000);
+        }
+
+        // ==================== ГОТОВЫЕ ТЕСТЫ ====================
+
+        // Глобальные функции для тестирования
+        window.addUserToQueue = addUserToQueue;
+        window.removeUserFromQueue = removeUserFromQueue;
+        window.handleDiscordEvent = window.handleDiscordEvent;
+
+        // Автоматический тест при загрузке
+        setTimeout(() => {
+            if (pickQueue.length === 0) {
+                showNotification('🎯 Система готова! Нажмите "Добавить в очередь" для теста', 'info');
+            }
+        }, 2000);
+    </script>
+</body>
+</html>
